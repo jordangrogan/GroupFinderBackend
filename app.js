@@ -10,6 +10,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.get('/', (req, res) => {
 
+    let promises = []
+
     let groups = []
     let offset = 0
         // TODO: The max number of groups is 100, need to refactor for pagination
@@ -56,6 +58,7 @@ app.get('/', (req, res) => {
         })
 
     }).catch(error => { console.log(error.message) })
+    promises.push(getGroups)
 
     // Get group leaders & long/lat of location & filters once groups are loaded
     getGroups.then(() => {
@@ -63,7 +66,7 @@ app.get('/', (req, res) => {
         groups.forEach((group, i) => {
 
             // Get group leaders
-            request.get({
+            promises.push(request.get({
                 uri: `https://api.planningcenteronline.com/groups/v2/groups/${group.id}/memberships?where[role]=leader`,
                 method: 'GET',
                 json: true
@@ -74,10 +77,12 @@ app.get('/', (req, res) => {
                 groups[i].leaderemail = body.data[0].attributes.email_address
                 groups[i].leaderphone = body.data[0].attributes.phone_number
 
-            }).catch(error => { console.log(error.message) })
+                resolve(true);
+
+            }).catch(error => { console.log(error.message) }))
 
             // Get long/lat of location
-            request.get({
+            promises.push(request.get({
                 uri: `https://api.planningcenteronline.com/groups/v2/groups/${group.id}/location`,
                 method: 'GET',
                 json: true
@@ -86,7 +91,7 @@ app.get('/', (req, res) => {
                 groups[i].lat = body.data.attributes.latitude
                 groups[i].long = body.data.attributes.longitude
 
-            }).catch(error => { console.log(error.message) })
+            }).catch(error => { console.log(error.message) }))
 
         })
 
@@ -118,7 +123,7 @@ app.get('/', (req, res) => {
 
         // For each tag, get the list of groups for that tag, set that filter to true for those groups
         filtersTags.forEach(filter => {
-            request.get({
+            promises.push(request.get({
                 uri: filter.tagURI,
                 method: 'GET',
                 json: true
@@ -126,14 +131,14 @@ app.get('/', (req, res) => {
                 body.data.forEach(group => {
                     groups.find(g => g.id === group.id).filters[filter.filterName] = true
                 })
-            }).catch(error => { console.log(error.message) })
+            }).catch(error => { console.log(error.message) }))
         })
 
     })
 
-    setTimeout(() => {
+    Promise.all(promises).then(() => {
         res.send(groups)
-    }, 2000)
+    })
 
 })
 
