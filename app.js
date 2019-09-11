@@ -136,9 +136,11 @@ app.get('/', (req, res) => {
 
     })
 
-    Promise.all(promises).then(() => {
+    // TODO: Still can't figure out how to get the result of groups after all the promises have not only resolved but also the group data modified
+    // 🤔🤔🤔🤔🤔🤔🤔🤔🤔
+    setTimeout(() => {
         res.send(groups)
-    })
+    }, 2000)
 
 })
 
