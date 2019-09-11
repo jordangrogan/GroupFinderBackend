@@ -56,7 +56,7 @@ app.get('/', (req, res) => {
 
     }).catch(error => { console.log(error.message) })
 
-    // Get group leaders & long/lat of location once groups are loaded
+    // Get group leaders & long/lat of location & filters once groups are loaded
     getGroups.then(() => {
 
         groups.forEach((group, i) => {
@@ -68,7 +68,6 @@ app.get('/', (req, res) => {
                 json: true
             }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
 
-                //console.log(body)
                 // TODO: multiple leaders
                 groups[i].leader = `${body.data[0].attributes.first_name} ${body.data[0].attributes.last_name}`
                 groups[i].leaderemail = body.data[0].attributes.email_address
@@ -89,11 +88,43 @@ app.get('/', (req, res) => {
             }).catch(error => { console.log(error.message) })
 
         })
+
+        // Go through each filter & mark the appropriate groups
+
+        // typeMens
+        request.get({
+            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014484/groups`,
+            method: 'GET',
+            json: true
+        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
+            body.data.forEach(group => {
+                groups.find(g => g.id === group.id).filters.typeMens = true
+            })
+        }).catch(error => { console.log(error.message) })
+
+        // typeWomens
+        request.get({
+            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014485/groups`,
+            method: 'GET',
+            json: true
+        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
+            body.data.forEach(group => {
+                groups.find(g => g.id === group.id).filters.typeWomens = true
+            })
+        }).catch(error => { console.log(error.message) })
+
+        // typeMixed
+        request.get({
+            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014486/groups`,
+            method: 'GET',
+            json: true
+        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
+            body.data.forEach(group => {
+                groups.find(g => g.id === group.id).filters.typeMixed = true
+            })
+        }).catch(error => { console.log(error.message) })
+
     })
-
-    // Go through each filter & mark the appropriate groups
-
-
 
     setTimeout(() => {
         res.send(groups)
