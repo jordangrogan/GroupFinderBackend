@@ -33,11 +33,13 @@ app.get('/', (req, res) => {
                     typeMens: false,
                     typeWomens: false,
                     typeMixed: false,
+                    college: false,
                     age20s: false,
                     age30s: false,
                     age40s: false,
                     age50s: false,
-                    age60splus: false,
+                    age60s: false,
+                    age70splus: false,
                     daySun: false,
                     dayMon: false,
                     dayTues: false,
@@ -49,7 +51,6 @@ app.get('/', (req, res) => {
                     timeAfternoon: false,
                     timeEvening: false,
                     childcare: false,
-                    noChildcare: false
                 }
             })
         })
@@ -91,38 +92,42 @@ app.get('/', (req, res) => {
 
         // Go through each filter & mark the appropriate groups
 
-        // typeMens
-        request.get({
-            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014484/groups`,
-            method: 'GET',
-            json: true
-        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
-            body.data.forEach(group => {
-                groups.find(g => g.id === group.id).filters.typeMens = true
-            })
-        }).catch(error => { console.log(error.message) })
+        const filtersTags = [
+            { filterName: "typeMens", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014484/groups" },
+            { filterName: "typeWomens", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014485/groups" },
+            { filterName: "typeMixed", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014486/groups" },
+            { filterName: "college", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/35816/groups" },
+            { filterName: "age20s", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041966/groups" },
+            { filterName: "age30s", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041961/groups" },
+            { filterName: "age40s", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041962/groups" },
+            { filterName: "age50s", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041963/groups" },
+            { filterName: "age60s", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041964/groups" },
+            { filterName: "age70splus", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8935/tags/1041965/groups" },
+            { filterName: "daySun", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041953/groups" },
+            { filterName: "dayMon", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041954/groups" },
+            { filterName: "dayTues", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041955/groups" },
+            { filterName: "dayWed", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041956/groups" },
+            { filterName: "dayThurs", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041957/groups" },
+            { filterName: "dayFri", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041958/groups" },
+            { filterName: "daySat", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253648/tags/1041959/groups" },
+            { filterName: "timeMorning", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253647/tags/1014633/groups" },
+            { filterName: "timeAfternoon", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253647/tags/1014634/groups" },
+            { filterName: "timeEvening", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/253647/tags/1014635/groups" },
+            { filterName: "childcare", tagURI: "https://api.planningcenteronline.com/groups/v2/tag_groups/8939/tags/35830/groups" }
+        ]
 
-        // typeWomens
-        request.get({
-            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014485/groups`,
-            method: 'GET',
-            json: true
-        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
-            body.data.forEach(group => {
-                groups.find(g => g.id === group.id).filters.typeWomens = true
-            })
-        }).catch(error => { console.log(error.message) })
-
-        // typeMixed
-        request.get({
-            uri: `https://api.planningcenteronline.com/groups/v2/tag_groups/253620/tags/1014486/groups`,
-            method: 'GET',
-            json: true
-        }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
-            body.data.forEach(group => {
-                groups.find(g => g.id === group.id).filters.typeMixed = true
-            })
-        }).catch(error => { console.log(error.message) })
+        // For each tag, get the list of groups for that tag, set that filter to true for those groups
+        filtersTags.forEach(filter => {
+            request.get({
+                uri: filter.tagURI,
+                method: 'GET',
+                json: true
+            }).auth(process.env.PCO_APP_ID, process.env.PCO_SECRET, false).then(body => {
+                body.data.forEach(group => {
+                    groups.find(g => g.id === group.id).filters[filter.filterName] = true
+                })
+            }).catch(error => { console.log(error.message) })
+        })
 
     })
 
